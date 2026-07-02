@@ -1,0 +1,16 @@
+[Unit]
+Description=WG Captive expired VPN HTTP portal
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/wg-captive-portal
+Environment=HOST=0.0.0.0
+Environment=PORT=80
+ExecStart=/usr/bin/node /opt/wg-captive-portal/server.js
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

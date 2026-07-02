@@ -1,0 +1,13 @@
+{
+  "name": "wg-captive-portal",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Simple HTTP captive portal showing an expired VPN notice.",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
