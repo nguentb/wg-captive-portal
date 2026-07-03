@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>VPN đã hết hạn</title>
+  <title>VPN &#273;&#227; h&#7871;t h&#7841;n</title>
   <style>
     * {
       box-sizing: border-box;
@@ -34,7 +34,9 @@
       padding: 28px 16px;
       background: var(--bg);
       color: var(--text);
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
     }
 
     .wrap {
@@ -51,9 +53,35 @@
     }
 
     .warning {
-      margin-bottom: 8px;
-      font-size: 48px;
+      position: relative;
+      width: 62px;
+      height: 54px;
+      margin: 0 auto 12px;
+    }
+
+    .warning::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      width: 0;
+      height: 0;
+      border-left: 31px solid transparent;
+      border-right: 31px solid transparent;
+      border-bottom: 54px solid #ffc85a;
+      filter: drop-shadow(0 2px 0 rgba(255, 255, 255, 0.18));
+    }
+
+    .warning::after {
+      content: "!";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 7px;
+      color: #142033;
+      font-size: 34px;
       line-height: 1;
+      font-weight: 900;
     }
 
     h1 {
@@ -105,6 +133,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      gap: 10px;
       min-height: 62px;
       padding: 14px 18px;
       border-radius: 13px;
@@ -112,6 +141,18 @@
       font-size: 20px;
       font-weight: 800;
       text-decoration: none;
+    }
+
+    .button .icon {
+      width: 28px;
+      height: 28px;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.18);
+      font-size: 13px;
+      line-height: 1;
+      font-weight: 900;
     }
 
     .button.call {
@@ -151,7 +192,19 @@
       }
 
       .warning {
-        font-size: 42px;
+        width: 54px;
+        height: 48px;
+      }
+
+      .warning::before {
+        border-left-width: 27px;
+        border-right-width: 27px;
+        border-bottom-width: 48px;
+      }
+
+      .warning::after {
+        bottom: 6px;
+        font-size: 30px;
       }
 
       h1 {
@@ -177,26 +230,26 @@
 <body>
   <div class="wrap">
     <main>
-      <div class="warning" aria-hidden="true">⚠️</div>
-      <h1>VPN đã hết hạn</h1>
-      <p class="lead">Dịch vụ VPN của bạn đã hết hạn.</p>
-      <p class="lead">Vui lòng gia hạn để tiếp tục sử dụng Internet.</p>
+      <div class="warning" aria-hidden="true">!</div>
+      <h1>VPN &#273;&#227; h&#7871;t h&#7841;n</h1>
+      <p class="lead">D&#7883;ch v&#7909; VPN c&#7911;a b&#7841;n &#273;&#227; h&#7871;t h&#7841;n.</p>
+      <p class="lead">Vui l&#242;ng gia h&#7841;n &#273;&#7875; ti&#7871;p t&#7909;c s&#7917; d&#7909;ng Internet.</p>
 
-      <section class="contact-card" aria-label="Liên hệ gia hạn">
-        <p class="contact-label">Liên hệ gia hạn qua:</p>
+      <section class="contact-card" aria-label="Lien he gia han">
+        <p class="contact-label">Li&#234;n h&#7879; gia h&#7841;n qua:</p>
         <a class="phone-number" href="tel:+79853066666">+79853066666</a>
 
         <div class="actions">
-          <a class="button call" href="tel:+79853066666">📞&nbsp; Gọi điện</a>
-          <a class="button whatsapp" href="https://wa.me/79853066666">💬&nbsp; WhatsApp</a>
-          <a class="button zalo" href="https://zalo.me/79853066666">📱&nbsp; Zalo</a>
+          <a class="button call" href="tel:+79853066666"><span class="icon" aria-hidden="true">TEL</span><span>G&#7885;i &#273;i&#7879;n</span></a>
+          <a class="button whatsapp" href="https://wa.me/79853066666"><span class="icon" aria-hidden="true">WA</span><span>WhatsApp</span></a>
+          <a class="button zalo" href="https://zalo.me/79853066666"><span class="icon" aria-hidden="true">Z</span><span>Zalo</span></a>
         </div>
       </section>
 
-      <p class="note">Sau khi gia hạn, kết nối Internet sẽ được mở lại.</p>
+      <p class="note">Sau khi gia h&#7841;n, k&#7871;t n&#7889;i Internet s&#7869; &#273;&#432;&#7907;c m&#7903; l&#7841;i.</p>
     </main>
 
-    <footer>Powered by <strong>Đại An VPN</strong></footer>
+    <footer>Powered by <strong>&#272;&#7841;i An VPN</strong></footer>
   </div>
 </body>
 </html>
