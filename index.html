@@ -3,10 +3,27 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>VPN het han</title>
+  <title>VPN đã hết hạn</title>
   <style>
     * {
       box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #0f1726;
+      --panel: #121b2b;
+      --inner: #050a1a;
+      --text: #f8fafc;
+      --muted: #9fb0ca;
+      --danger: #ff6b70;
+      --green: #25d366;
+      --blue: #2f68e8;
+      --cyan: #16b6d0;
+    }
+
+    html,
+    body {
+      min-height: 100%;
     }
 
     body {
@@ -14,64 +31,172 @@
       min-height: 100vh;
       display: grid;
       place-items: center;
-      padding: 24px;
-      background: #f5f6f8;
-      color: #111827;
+      padding: 28px 16px;
+      background: var(--bg);
+      color: var(--text);
       font-family: Arial, Helvetica, sans-serif;
     }
 
-    main {
-      width: min(460px, 100%);
-      padding: 30px 26px;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      background: #ffffff;
+    .wrap {
+      width: min(584px, 100%);
       text-align: center;
-      box-shadow: 0 14px 42px rgba(17, 24, 39, 0.08);
     }
 
-    .icon {
-      width: 58px;
-      height: 58px;
-      margin: 0 auto 18px;
-      display: grid;
-      place-items: center;
-      border-radius: 50%;
-      background: #fee2e2;
-      color: #b91c1c;
-      font-size: 34px;
-      font-weight: 700;
+    main {
+      width: 100%;
+      padding: 28px 24px 30px;
+      border-radius: 24px;
+      background: var(--panel);
+      box-shadow: 0 22px 70px rgba(0, 0, 0, 0.28);
+    }
+
+    .warning {
+      margin-bottom: 8px;
+      font-size: 48px;
+      line-height: 1;
     }
 
     h1 {
-      margin: 0 0 12px;
-      font-size: 28px;
-      line-height: 1.2;
+      margin: 0 0 16px;
+      color: var(--danger);
+      font-size: 34px;
+      line-height: 1.18;
       letter-spacing: 0;
+      font-weight: 800;
     }
 
-    p {
+    .lead {
       margin: 0;
-      color: #4b5563;
-      font-size: 16px;
-      line-height: 1.55;
+      color: var(--text);
+      font-size: 21px;
+      line-height: 1.45;
     }
 
-    .contact {
-      margin-top: 18px;
-      padding-top: 18px;
-      border-top: 1px solid #eef0f3;
-      color: #111827;
-      font-weight: 700;
+    .contact-card {
+      margin-top: 22px;
+      padding: 34px 20px 20px;
+      border-radius: 16px;
+      background: var(--inner);
+    }
+
+    .contact-label {
+      margin: 0 0 12px;
+      color: var(--text);
+      font-size: 21px;
+      line-height: 1.35;
+    }
+
+    .phone-number {
+      display: block;
+      margin-bottom: 22px;
+      color: var(--green);
+      font-size: 32px;
+      line-height: 1.15;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .actions {
+      display: grid;
+      gap: 14px;
+    }
+
+    .button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 62px;
+      padding: 14px 18px;
+      border-radius: 13px;
+      color: #ffffff;
+      font-size: 20px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .button.call {
+      background: var(--blue);
+    }
+
+    .button.whatsapp {
+      background: var(--green);
+    }
+
+    .button.zalo {
+      background: var(--cyan);
+    }
+
+    .note {
+      margin: 20px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.45;
+    }
+
+    footer {
+      margin-top: 16px;
+      color: #7486a5;
+      font-size: 16px;
+      line-height: 1.4;
+    }
+
+    footer strong {
+      color: var(--green);
+    }
+
+    @media (max-width: 520px) {
+      main {
+        padding: 24px 16px 26px;
+        border-radius: 18px;
+      }
+
+      .warning {
+        font-size: 42px;
+      }
+
+      h1 {
+        font-size: 29px;
+      }
+
+      .lead,
+      .contact-label {
+        font-size: 18px;
+      }
+
+      .phone-number {
+        font-size: 27px;
+      }
+
+      .button {
+        min-height: 58px;
+        font-size: 18px;
+      }
     }
   </style>
 </head>
 <body>
-  <main>
-    <div class="icon">!</div>
-    <h1>Ket noi VPN cua ban da het han.</h1>
-    <p>Vui long gia han de tiep tuc su dung Internet.</p>
-    <p class="contact">Lien he nha cung cap dich vu de duoc ho tro.</p>
-  </main>
+  <div class="wrap">
+    <main>
+      <div class="warning" aria-hidden="true">⚠️</div>
+      <h1>VPN đã hết hạn</h1>
+      <p class="lead">Dịch vụ VPN của bạn đã hết hạn.</p>
+      <p class="lead">Vui lòng gia hạn để tiếp tục sử dụng Internet.</p>
+
+      <section class="contact-card" aria-label="Liên hệ gia hạn">
+        <p class="contact-label">Liên hệ gia hạn qua:</p>
+        <a class="phone-number" href="tel:+79853066666">+79853066666</a>
+
+        <div class="actions">
+          <a class="button call" href="tel:+79853066666">📞&nbsp; Gọi điện</a>
+          <a class="button whatsapp" href="https://wa.me/79853066666">💬&nbsp; WhatsApp</a>
+          <a class="button zalo" href="https://zalo.me/79853066666">📱&nbsp; Zalo</a>
+        </div>
+      </section>
+
+      <p class="note">Sau khi gia hạn, kết nối Internet sẽ được mở lại.</p>
+    </main>
+
+    <footer>Powered by <strong>Đại An VPN</strong></footer>
+  </div>
 </body>
 </html>
