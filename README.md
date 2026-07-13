@@ -192,26 +192,11 @@ API token: wgc_xxxxxxxxxxxxxxxxxxxxx
 
 Token duoc luu o server portal va khong hien day du tren trinh duyet.
 
-## Captive popup tu nhan client
-
-Neu captive popup mo truc tiep `https://domain.com/` khong kem `node` va `ip`, portal se tu lay IP client tu header `X-Real-IP`, `X-Forwarded-For` hoac remote address, roi dung node mac dinh de tra cuu user. Node mac dinh la `DEFAULT_NODE`, `NODE_NAME`, hoac node dau tien trong admin.
-
-Nginx config trong repo da truyen `X-Real-IP` vao Node. Neu firewall/router NAT request sang portal lam mat IP that cua client, portal khong the tu nhan user; khi do rule captive redirect phai gan query `?node=...&ip=...`.
 ## Portal user
 
-Portal nhan link dang:
+Trang user o `/` chi hien thi thong bao mac dinh qua HTTPS. Node captive chi can dua user den domain portal; portal khong hien ten user, IP noi bo hay trang thai rieng tren giao dien user.
 
-```text
-https://domain.com/?node=wg-server-01&ip=10.8.0.2
-```
-
-Trang se goi backend portal:
-
-```text
-GET /api/client-info?node=wg-server-01&ip=10.8.0.2
-```
-
-Backend portal se doc danh sach node da cau hinh trong admin, goi API node WireGuard, lay ten user/trang thai/han dung, roi tra ve cho giao dien portal.
+Nginx HTTPS config do `ssl-install` tao se redirect HTTP ve domain HTTPS co dinh, phu hop cho captive popup.
 
 ## Cau hinh bang env neu khong dung admin
 
@@ -235,7 +220,6 @@ Node trong admin se uu tien hon env neu trung server name.
 
 ```bash
 curl -i http://domain.com/
-curl -i http://domain.com/?node=wg-server-01\&ip=10.8.0.2
 curl -i http://domain.com/admin
 ```
 

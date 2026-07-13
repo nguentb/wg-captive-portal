@@ -100,62 +100,6 @@
       line-height: 1.35;
     }
 
-    .user-card {
-      margin: 16px 0 0;
-      padding: 14px 16px;
-      border: 1px solid rgba(47, 104, 232, 0.32);
-      border-radius: 15px;
-      background: rgba(5, 10, 26, 0.66);
-      text-align: left;
-    }
-
-    .user-card.hidden {
-      display: none;
-    }
-
-    .user-title {
-      margin: 0 0 8px;
-      color: var(--text);
-      font-size: 18px;
-      line-height: 1.25;
-      font-weight: 800;
-    }
-
-    .user-grid {
-      display: grid;
-      gap: 6px;
-      color: var(--muted);
-      font-size: 15px;
-      line-height: 1.35;
-    }
-
-    .user-grid strong {
-      color: var(--text);
-      font-weight: 800;
-    }
-
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      min-height: 24px;
-      padding: 3px 9px;
-      border-radius: 999px;
-      background: rgba(255, 107, 112, 0.16);
-      color: #ffb4b7;
-      font-size: 13px;
-      font-weight: 800;
-      text-transform: uppercase;
-    }
-
-    .status-pill.active {
-      background: rgba(37, 211, 102, 0.16);
-      color: #8af0b0;
-    }
-
-    .status-pill.disabled {
-      background: rgba(255, 200, 90, 0.16);
-      color: #ffd98b;
-    }
 
     .contact-card {
       margin-top: 16px;
@@ -418,15 +362,6 @@
       <h1 id="mainTitle">VPN &#273;&#227; h&#7871;t h&#7841;n</h1>
       <p class="lead" id="leadLine1">D&#7883;ch v&#7909; VPN c&#7911;a b&#7841;n &#273;&#227; h&#7871;t h&#7841;n.</p>
       <p class="lead" id="leadLine2">Vui l&#242;ng gia h&#7841;n &#273;&#7875; ti&#7871;p t&#7909;c s&#7917; d&#7909;ng Internet.</p>
-      <section id="userCard" class="user-card hidden" aria-live="polite">
-        <p class="user-title" id="userTitle">Dang kiem tra thong tin tai khoan...</p>
-        <div class="user-grid">
-          <div>User: <strong id="userName">-</strong></div>
-          <div>IP: <strong id="userIp">-</strong></div>
-          <div>Node: <strong id="userNode">-</strong></div>
-          <div>Trang thai: <span id="userStatus" class="status-pill">unknown</span></div>
-        </div>
-      </section>
 
       <section class="contact-card" aria-label="Lien he gia han">
         <p class="contact-label" id="contactLabel">Li&#234;n h&#7879; gia h&#7841;n qua:</p>
@@ -444,87 +379,5 @@
 
     <footer>Powered by <strong>&#272;&#7841;i An VPN</strong></footer>
   </div>
-  <script>
-    (function () {
-      var params = new URLSearchParams(window.location.search);
-      var node = params.get("node") || "";
-      var ip = params.get("ip") || "";
-      var card = document.getElementById("userCard");
-      document.getElementById("userIp").textContent = ip || "-";
-      document.getElementById("userNode").textContent = node || "-";
-
-      function setStatus(status) {
-        var el = document.getElementById("userStatus");
-        var value = status || "unknown";
-        el.textContent = value;
-        el.className = "status-pill " + value;
-      }
-
-      function clientName(client) {
-        return client && client.name ? client.name : "khach hang";
-      }
-
-      function normalizedStatus(client) {
-        var value = client && client.status ? String(client.status).toLowerCase() : "unknown";
-        if (client && (client.disabled || client.enabled === false || value === "disabled")) return "disabled";
-        if (client && (client.expired || value === "expired")) return "expired";
-        return value;
-      }
-
-      function setText(id, value) {
-        var el = document.getElementById(id);
-        if (el) el.textContent = value;
-      }
-
-      function applyMessage(client) {
-        var name = clientName(client);
-        var status = normalizedStatus(client);
-        if (status === "disabled") {
-          document.title = "VPN " + name + " \u0111\u00e3 b\u1ecb v\u00f4 hi\u1ec7u h\u00f3a";
-          setText("mainTitle", "VPN " + name + " \u0111\u00e3 b\u1ecb v\u00f4 hi\u1ec7u h\u00f3a");
-          setText("leadLine1", "T\u00e0i kho\u1ea3n VPN c\u1ee7a b\u1ea1n \u0111\u00e3 b\u1ecb v\u00f4 hi\u1ec7u h\u00f3a.");
-          setText("leadLine2", "Vui l\u00f2ng li\u00ean h\u1ec7 \u0111\u1ec3 \u0111\u01b0\u1ee3c h\u1ed7 tr\u1ee3.");
-          setText("contactLabel", "Li\u00ean h\u1ec7 h\u1ed7 tr\u1ee3 qua:");
-          setText("noteText", "Sau khi \u0111\u01b0\u1ee3c h\u1ed7 tr\u1ee3, k\u1ebft n\u1ed1i Internet s\u1ebd \u0111\u01b0\u1ee3c m\u1edf l\u1ea1i.");
-          return;
-        }
-        if (status === "expired") {
-          document.title = "VPN " + name + " \u0111\u00e3 h\u1ebft h\u1ea1n";
-          setText("mainTitle", "VPN " + name + " \u0111\u00e3 h\u1ebft h\u1ea1n");
-          setText("leadLine1", "D\u1ecbch v\u1ee5 VPN c\u1ee7a b\u1ea1n \u0111\u00e3 h\u1ebft h\u1ea1n.");
-          setText("leadLine2", "Vui l\u00f2ng gia h\u1ea1n \u0111\u1ec3 ti\u1ebfp t\u1ee5c s\u1eed d\u1ee5ng Internet.");
-          setText("contactLabel", "Li\u00ean h\u1ec7 gia h\u1ea1n qua:");
-          setText("noteText", "Sau khi gia h\u1ea1n, k\u1ebft n\u1ed1i Internet s\u1ebd \u0111\u01b0\u1ee3c m\u1edf l\u1ea1i.");
-        }
-      }
-
-      function showClient(client) {
-        var name = clientName(client);
-        var status = normalizedStatus(client);
-        applyMessage(client);
-        document.getElementById("userTitle").textContent = "Thong tin VPN " + name;
-        document.getElementById("userName").textContent = name;
-        document.getElementById("userIp").textContent = client && client.ip ? client.ip : ip || "-";
-        document.getElementById("userNode").textContent = client && client.node ? client.node : node || "-";
-        setStatus(status);
-      }
-
-      var apiUrl = "/api/client-info";
-      if (node || ip) apiUrl += "?node=" + encodeURIComponent(node) + "&ip=" + encodeURIComponent(ip);
-
-      fetch(apiUrl, { cache: "no-store" })
-        .then(function (res) { return res.json(); })
-        .then(function (data) {
-          if (data && data.client && data.client.status !== "unknown") {
-            card.classList.remove("hidden");
-            showClient(data.client);
-          }
-          else showClient({ node: node, ip: ip, status: "unknown" });
-        })
-        .catch(function () {
-          showClient({ node: node, ip: ip, status: "unknown" });
-        });
-    }());
-  </script>
 </body>
 </html>
