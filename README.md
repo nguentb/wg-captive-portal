@@ -192,6 +192,11 @@ API token: wgc_xxxxxxxxxxxxxxxxxxxxx
 
 Token duoc luu o server portal va khong hien day du tren trinh duyet.
 
+## Captive popup tu nhan client
+
+Neu captive popup mo truc tiep `https://domain.com/` khong kem `node` va `ip`, portal se tu lay IP client tu header `X-Real-IP`, `X-Forwarded-For` hoac remote address, roi dung node mac dinh de tra cuu user. Node mac dinh la `DEFAULT_NODE`, `NODE_NAME`, hoac node dau tien trong admin.
+
+Nginx config trong repo da truyen `X-Real-IP` vao Node. Neu firewall/router NAT request sang portal lam mat IP that cua client, portal khong the tu nhan user; khi do rule captive redirect phai gan query `?node=...&ip=...`.
 ## Portal user
 
 Portal nhan link dang:

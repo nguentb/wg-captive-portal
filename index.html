@@ -450,8 +450,6 @@
       var node = params.get("node") || "";
       var ip = params.get("ip") || "";
       var card = document.getElementById("userCard");
-      if (!node && !ip) return;
-      card.classList.remove("hidden");
       document.getElementById("userIp").textContent = ip || "-";
       document.getElementById("userNode").textContent = node || "-";
 
@@ -511,10 +509,16 @@
         setStatus(status);
       }
 
-      fetch("/api/client-info?node=" + encodeURIComponent(node) + "&ip=" + encodeURIComponent(ip), { cache: "no-store" })
+      var apiUrl = "/api/client-info";
+      if (node || ip) apiUrl += "?node=" + encodeURIComponent(node) + "&ip=" + encodeURIComponent(ip);
+
+      fetch(apiUrl, { cache: "no-store" })
         .then(function (res) { return res.json(); })
         .then(function (data) {
-          if (data && data.client) showClient(data.client);
+          if (data && data.client && data.client.status !== "unknown") {
+            card.classList.remove("hidden");
+            showClient(data.client);
+          }
           else showClient({ node: node, ip: ip, status: "unknown" });
         })
         .catch(function () {

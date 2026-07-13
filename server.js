@@ -85,6 +85,36 @@ function safeNodeName(value) {
   return String(value || "").trim().replace(/[^A-Za-z0-9_.-]/g, "");
 }
 
+function firstHeaderIp(value) {
+  return String(value || "").split(",")[0].trim();
+}
+
+function normalizeRemoteIp(value) {
+  let ip = String(value || "").trim();
+  if (ip.startsWith("::ffff:")) ip = ip.slice(7);
+  if (ip === "::1") return "127.0.0.1";
+  return ip;
+}
+
+function requestClientIp(req) {
+  return normalizeRemoteIp(
+    firstHeaderIp(req.headers["x-real-ip"]) ||
+    firstHeaderIp(req.headers["x-forwarded-for"]) ||
+    req.socket?.remoteAddress ||
+    ""
+  );
+}
+
+function defaultNodeName() {
+  const configured = safeNodeName(process.env.DEFAULT_NODE || process.env.NODE_NAME || "");
+  if (configured) return configured;
+  const stored = loadStoredNodes()[0];
+  if (stored?.name) return stored.name;
+  const envConfigs = envNodeConfigs();
+  const names = Object.keys(envConfigs);
+  if (names.length) return names[0];
+  return "";
+}
 function publicNode(node) {
   const token = String(node.token || "");
   return {
@@ -326,9 +356,11 @@ async function handleAdmin(req, res, url) {
 
 async function handlePortal(req, res, url) {
   if (url.pathname === "/api/client-info") {
-    const node = String(url.searchParams.get("node") || "").trim();
-    const ip = String(url.searchParams.get("ip") || "").trim();
-    if (!node || !ip) return sendJson(res, 400, { ok: false, error: "Missing node or ip" });
+    const node = safeNodeName(url.searchParams.get("node") || defaultNodeName());
+    const ip = String(url.searchParams.get("ip") || requestClientIp(req)).trim();
+    if (!node || !ip) {
+      return sendJson(res, 400, { ok: false, error: "Missing node or ip", client: { node, ip, status: "unknown" } });
+    }
     try {
       return sendJson(res, 200, { ok: true, client: await lookupClient(node, ip) });
     } catch (error) {
