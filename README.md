@@ -39,6 +39,8 @@ Cloudflare API token: token co quyen Zone DNS Edit voi zone domain.com
 
 `ssl-install` se tu cai cac goi can thiet (`certbot`, `python3-certbot-dns-cloudflare`), ghi Cloudflare credentials vao `/etc/letsencrypt/wg-captive-cloudflare.ini` voi mode `0600`, cap cert cho domain portal, ghi lai nginx HTTPS config, test `nginx -t` va reload nginx. Admin se dung chung domain tai `/admin`.
 
+Khi ghi nginx HTTPS config, HTTP port 80 duoc dat lam `default_server` va redirect co dinh ve domain portal da nhap. Cach nay tranh truong hop captive check gui Host nhu `connectivitycheck.gstatic.com` roi bi redirect nham sang HTTPS cua domain do.
+
 Co the chay khong can hoi tuong tac:
 
 ```bash

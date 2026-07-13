@@ -140,10 +140,10 @@ log "Writing nginx HTTPS config to ${NGINX_SITE}"
 install -d -m 0755 "$(dirname "$NGINX_SITE")" "$(dirname "$NGINX_ENABLED")"
 cat > "$NGINX_SITE" <<EOF
 server {
-    listen 80;
-    listen [::]:80;
-    server_name ${DOMAIN};
-    return 301 https://\$host\$request_uri;
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name _ ${DOMAIN};
+    return 302 https://${DOMAIN}\$request_uri;
 }
 
 server {
