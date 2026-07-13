@@ -6,11 +6,9 @@ BRANCH="${WG_CAPTIVE_PORTAL_BRANCH:-main}"
 TARBALL_URL="${WG_CAPTIVE_PORTAL_TARBALL_URL:-https://github.com/${REPO}/archive/refs/heads/${BRANCH}.tar.gz}"
 INSTALL_DIR="${INSTALL_DIR:-/opt/wg-captive-portal}"
 SERVICE_NAME="wg-captive-portal"
-NODE_STORE="${NODE_STORE:-/etc/wg-captive-portal-nodes.json}"
 HOST_VALUE="${HOST:-127.0.0.1}"
 PORT_VALUE="${PORT:-8080}"
 DOMAIN="${DOMAIN:-}"
-ADMIN_PASSWORD="${ADMIN_PASSWORD:-}"
 DISABLE_NGINX_DEFAULT="${DISABLE_NGINX_DEFAULT:-1}"
 TMP_DIR=""
 
@@ -32,11 +30,10 @@ systemd_env_value() {
 usage() {
   cat <<'EOF'
 Usage:
-  install-remote.sh --domain domain.com [--admin-password PASSWORD]
+  install-remote.sh --domain domain.com
 
 Options:
   --domain DOMAIN             Portal domain, for example domain.com.
-  --admin-password PASSWORD   Admin password. Generated if omitted.
   --branch BRANCH             GitHub branch, default main.
   --repo OWNER/REPO           GitHub repo, default nguentb/wg-captive-portal.
 
@@ -44,7 +41,6 @@ Environment overrides:
   INSTALL_DIR=/opt/wg-captive-portal
   HOST=127.0.0.1
   PORT=8080
-  NODE_STORE=/etc/wg-captive-portal-nodes.json
   DISABLE_NGINX_DEFAULT=1
 EOF
 }
@@ -60,13 +56,6 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --domain)
       DOMAIN="${2:-}"
-      shift 2
-      ;;
-    --admin-domain)
-      shift 2
-      ;;
-    --admin-password)
-      ADMIN_PASSWORD="${2:-}"
       shift 2
       ;;
     --branch)
@@ -91,15 +80,6 @@ done
 
 [[ "${EUID}" -eq 0 ]] || fail "Please run as root, for example: curl -fsSL ... | sudo bash -s -- --domain domain.com"
 [[ -n "$DOMAIN" ]] || fail "--domain is required"
-
-if [[ -z "$ADMIN_PASSWORD" ]]; then
-  if command -v openssl >/dev/null 2>&1; then
-    ADMIN_PASSWORD="$(openssl rand -hex 16 | tr -d '\n')"
-  else
-    ADMIN_PASSWORD="$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32)"
-  fi
-fi
-
 if command -v apt-get >/dev/null 2>&1; then
   log "Installing dependencies with apt-get"
   apt-get update
@@ -140,8 +120,6 @@ cat > "/etc/systemd/system/${SERVICE_NAME}.service.d/override.conf" <<EOF
 [Service]
 Environment=HOST=$(systemd_env_value "$HOST_VALUE")
 Environment=PORT=$(systemd_env_value "$PORT_VALUE")
-Environment=ADMIN_PASSWORD=$(systemd_env_value "$ADMIN_PASSWORD")
-Environment=NODE_STORE=$(systemd_env_value "$NODE_STORE")
 EOF
 
 log "Configuring nginx"
@@ -165,9 +143,6 @@ systemctl reload nginx
 
 log "Installed successfully"
 log "Portal: http://${DOMAIN}"
-log "Admin:  http://${DOMAIN}/admin"
-log "Admin password: ${ADMIN_PASSWORD}"
-log "Node store: ${NODE_STORE}"
 log "SSL installer: sudo ssl-install"
 log "Update: sudo portal-update"
 log "Uninstall: sudo portal-uninstall"

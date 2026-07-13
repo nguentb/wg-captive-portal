@@ -126,6 +126,5 @@ if command -v nginx >/dev/null 2>&1; then
 fi
 
 log "Update complete"
-log "Admin: /admin"
 log "SSL installer: sudo ssl-install"
 log "Uninstall: sudo portal-uninstall"

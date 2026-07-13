@@ -1,9 +1,10 @@
 # wg-captive-portal
 
-Web HTTP/HTTPS rieng cho captive portal. Dung mot domain duy nhat: trang user o `/`, admin quan ly node o `/admin`.
+Web HTTP/HTTPS rieng cho captive portal. Repo nay chi hien thi trang thong bao mac dinh cho user bi captive; khong co trang admin va khong luu thong tin node/user.
 
-- `domain.com`: portal cho user het han
-- `domain.com/admin`: admin them/sua/xoa node WireGuard
+- `domain.com`: portal thong bao VPN het han
+- HTTP port 80 duoc nginx redirect sang HTTPS cua domain portal
+- Moi duong dan public deu tra ve cung mot trang portal mac dinh
 
 ## Cai dat 1 lenh
 
@@ -13,13 +14,7 @@ Tren Ubuntu server portal, chay:
 curl -fsSL https://raw.githubusercontent.com/nguentb/wg-captive-portal/main/scripts/install-remote.sh | sudo bash -s -- --domain domain.com
 ```
 
-Neu muon dat mat khau admin san:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/nguentb/wg-captive-portal/main/scripts/install-remote.sh | sudo bash -s -- --domain domain.com --admin-password 'your-strong-password'
-```
-
-Script se cai `nginx`, `nodejs`, tai repo ve `/opt/wg-captive-portal`, tao systemd service, cau hinh nginx reverse proxy HTTP, cai san cac lenh `ssl-install`, `portal-update`, `portal-uninstall` va in ra mat khau admin neu duoc tao tu dong.
+Script se cai `nginx`, `nodejs`, tai repo ve `/opt/wg-captive-portal`, tao systemd service, cau hinh nginx reverse proxy HTTP, cai san cac lenh `ssl-install`, `portal-update`, `portal-uninstall`.
 
 ## Cai SSL thu cong
 
@@ -37,7 +32,7 @@ Let's Encrypt email: admin@domain.com
 Cloudflare API token: token co quyen Zone DNS Edit voi zone domain.com
 ```
 
-`ssl-install` se tu cai cac goi can thiet (`certbot`, `python3-certbot-dns-cloudflare`), ghi Cloudflare credentials vao `/etc/letsencrypt/wg-captive-cloudflare.ini` voi mode `0600`, cap cert cho domain portal, ghi lai nginx HTTPS config, test `nginx -t` va reload nginx. Admin se dung chung domain tai `/admin`.
+`ssl-install` se tu cai cac goi can thiet (`certbot`, `python3-certbot-dns-cloudflare`), ghi Cloudflare credentials vao `/etc/letsencrypt/wg-captive-cloudflare.ini` voi mode `0600`, cap cert cho domain portal, ghi lai nginx HTTPS config, test `nginx -t` va reload nginx.
 
 Khi ghi nginx HTTPS config, HTTP port 80 duoc dat lam `default_server` va redirect co dinh ve domain portal da nhap. Cach nay tranh truong hop captive check gui Host nhu `connectivitycheck.gstatic.com` roi bi redirect nham sang HTTPS cua domain do.
 
@@ -59,6 +54,7 @@ Sau khi da cai portal, update len ban moi nhat bang:
 
 ```bash
 sudo portal-update
+sudo systemctl restart wg-captive-portal
 ```
 
 Neu muon update tu branch hoac repo khac:
@@ -81,14 +77,6 @@ Go portal khoi server:
 sudo portal-uninstall
 ```
 
-Mac dinh lenh nay go service, nginx site, file app va cac CLI command, nhung giu lai data node va SSL/cert.
-
-Xoa ca data node:
-
-```bash
-sudo portal-uninstall --purge-data
-```
-
 Xoa ca SSL/cert va Cloudflare credentials:
 
 ```bash
@@ -101,7 +89,7 @@ Neu muon chay khong hoi xac nhan:
 sudo portal-uninstall --yes
 ```
 
-## Cai service Node
+## Cai service Node thu cong
 
 ```bash
 sudo mkdir -p /opt/wg-captive-portal
@@ -115,26 +103,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now wg-captive-portal
 ```
 
-Mac dinh systemd trong repo de Node nghe noi bo `127.0.0.1:8080`; nginx se public port 80/443 va proxy vao Node. Nen doi mat khau admin truoc khi public:
-
-```bash
-sudo systemctl edit wg-captive-portal
-```
-
-Them:
-
-```ini
-[Service]
-Environment=ADMIN_PASSWORD=your-strong-password
-Environment=NODE_STORE=/etc/wg-captive-portal-nodes.json
-```
-
-Sau do:
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl restart wg-captive-portal
-```
+Mac dinh systemd trong repo de Node nghe noi bo `127.0.0.1:8080`; nginx se public port 80/443 va proxy vao Node.
 
 ## Chay sau nginx
 
@@ -144,8 +113,6 @@ Neu dung nginx/SSL, nen cho Node nghe local port, vi nginx nghe 80/443:
 [Service]
 Environment=HOST=127.0.0.1
 Environment=PORT=8080
-Environment=ADMIN_PASSWORD=your-strong-password
-Environment=NODE_STORE=/etc/wg-captive-portal-nodes.json
 ```
 
 Copy nginx reverse proxy:
@@ -171,56 +138,17 @@ Neu khong dung nginx, override service de Node nghe public port 80:
 [Service]
 Environment=HOST=0.0.0.0
 Environment=PORT=80
-Environment=ADMIN_PASSWORD=your-strong-password
 ```
-
-## Admin node
-
-Vao:
-
-```text
-https://domain.com/admin
-```
-
-Them node gom:
-
-```text
-Server name: wg-server-01
-Node API address: https://wg.example.com:51822
-API token: wgc_xxxxxxxxxxxxxxxxxxxxx
-```
-
-Token duoc luu o server portal va khong hien day du tren trinh duyet.
 
 ## Portal user
 
 Trang user o `/` chi hien thi thong bao mac dinh qua HTTPS. Node captive chi can dua user den domain portal; portal khong hien ten user, IP noi bo hay trang thai rieng tren giao dien user.
 
-Nginx HTTPS config do `ssl-install` tao se redirect HTTP ve domain HTTPS co dinh, phu hop cho captive popup.
-
-## Cau hinh bang env neu khong dung admin
-
-Van co the cau hinh mot node bang env:
-
-```ini
-Environment=NODE_NAME=wg-server-01
-Environment=NODE_API_BASE=https://wg.example.com:51822
-Environment=NODE_API_TOKEN=wgc_xxxxxxxxxxxxxxxxxxxxx
-```
-
-Hoac nhieu node bang JSON:
-
-```ini
-Environment='NODE_API_CONFIG={"wg-server-01":{"baseUrl":"https://wg1.example.com:51822","token":"wgc_token_1"},"wg-server-02":{"baseUrl":"https://wg2.example.com:51822","token":"wgc_token_2"}}'
-```
-
-Node trong admin se uu tien hon env neu trung server name.
-
 ## Kiem tra
 
 ```bash
 curl -i http://domain.com/
-curl -i http://domain.com/admin
+curl -i https://domain.com/
 ```
 
-Moi URL HTTP tren domain portal deu nen tra ve trang `VPN het han`, tru `/admin` se vao admin.
+Moi URL public tren domain portal deu nen tra ve trang `VPN het han`.

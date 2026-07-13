@@ -177,4 +177,3 @@ systemctl reload nginx
 
 log "SSL installed successfully"
 log "Portal: https://${DOMAIN}"
-log "Admin:  https://${DOMAIN}/admin"

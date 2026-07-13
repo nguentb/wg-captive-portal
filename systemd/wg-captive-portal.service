@@ -8,8 +8,6 @@ Type=simple
 WorkingDirectory=/opt/wg-captive-portal
 Environment=HOST=127.0.0.1
 Environment=PORT=8080
-Environment=ADMIN_PASSWORD=change-this-password
-Environment=NODE_STORE=/etc/wg-captive-portal-nodes.json
 ExecStart=/usr/bin/node /opt/wg-captive-portal/server.js
 Restart=always
 RestartSec=5
