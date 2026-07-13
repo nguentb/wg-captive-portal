@@ -5,6 +5,22 @@ Web HTTP/HTTPS rieng cho captive portal. Domain chinh hien trang het han, subdom
 - `domain.com`: portal cho user het han
 - `adm.domain.com`: admin them/sua/xoa node WireGuard
 
+## Cai dat 1 lenh
+
+Tren Ubuntu server portal, chay:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/nguentb/wg-captive-portal/main/scripts/install-remote.sh | sudo bash -s -- --domain domain.com --admin-domain adm.domain.com
+```
+
+Neu muon dat mat khau admin san:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/nguentb/wg-captive-portal/main/scripts/install-remote.sh | sudo bash -s -- --domain domain.com --admin-domain adm.domain.com --admin-password 'your-strong-password'
+```
+
+Script se cai `nginx`, `nodejs`, tai repo ve `/opt/wg-captive-portal`, tao systemd service, cau hinh nginx reverse proxy va in ra mat khau admin neu duoc tao tu dong.
+
 ## Cai service Node
 
 ```bash
