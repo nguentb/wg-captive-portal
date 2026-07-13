@@ -415,9 +415,9 @@
   <div class="wrap">
     <main>
       <div class="warning" aria-hidden="true">!</div>
-      <h1>VPN &#273;&#227; h&#7871;t h&#7841;n</h1>
-      <p class="lead">D&#7883;ch v&#7909; VPN c&#7911;a b&#7841;n &#273;&#227; h&#7871;t h&#7841;n.</p>
-      <p class="lead">Vui l&#242;ng gia h&#7841;n &#273;&#7875; ti&#7871;p t&#7909;c s&#7917; d&#7909;ng Internet.</p>
+      <h1 id="mainTitle">VPN &#273;&#227; h&#7871;t h&#7841;n</h1>
+      <p class="lead" id="leadLine1">D&#7883;ch v&#7909; VPN c&#7911;a b&#7841;n &#273;&#227; h&#7871;t h&#7841;n.</p>
+      <p class="lead" id="leadLine2">Vui l&#242;ng gia h&#7841;n &#273;&#7875; ti&#7871;p t&#7909;c s&#7917; d&#7909;ng Internet.</p>
       <section id="userCard" class="user-card hidden" aria-live="polite">
         <p class="user-title" id="userTitle">Dang kiem tra thong tin tai khoan...</p>
         <div class="user-grid">
@@ -429,7 +429,7 @@
       </section>
 
       <section class="contact-card" aria-label="Lien he gia han">
-        <p class="contact-label">Li&#234;n h&#7879; gia h&#7841;n qua:</p>
+        <p class="contact-label" id="contactLabel">Li&#234;n h&#7879; gia h&#7841;n qua:</p>
         <a class="phone-number" href="tel:+79853066666">+79853066666</a>
 
         <div class="actions">
@@ -439,7 +439,7 @@
         </div>
       </section>
 
-      <p class="note">Sau khi gia h&#7841;n, k&#7871;t n&#7889;i Internet s&#7869; &#273;&#432;&#7907;c m&#7903; l&#7841;i.</p>
+      <p class="note" id="noteText">Sau khi gia h&#7841;n, k&#7871;t n&#7889;i Internet s&#7869; &#273;&#432;&#7907;c m&#7903; l&#7841;i.</p>
     </main>
 
     <footer>Powered by <strong>&#272;&#7841;i An VPN</strong></footer>
@@ -462,13 +462,53 @@
         el.className = "status-pill " + value;
       }
 
+      function clientName(client) {
+        return client && client.name ? client.name : "khach hang";
+      }
+
+      function normalizedStatus(client) {
+        var value = client && client.status ? String(client.status).toLowerCase() : "unknown";
+        if (client && (client.disabled || client.enabled === false || value === "disabled")) return "disabled";
+        if (client && (client.expired || value === "expired")) return "expired";
+        return value;
+      }
+
+      function setText(id, value) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = value;
+      }
+
+      function applyMessage(client) {
+        var name = clientName(client);
+        var status = normalizedStatus(client);
+        if (status === "disabled") {
+          document.title = "VPN " + name + " \u0111\u00e3 b\u1ecb v\u00f4 hi\u1ec7u h\u00f3a";
+          setText("mainTitle", "VPN " + name + " \u0111\u00e3 b\u1ecb v\u00f4 hi\u1ec7u h\u00f3a");
+          setText("leadLine1", "T\u00e0i kho\u1ea3n VPN c\u1ee7a b\u1ea1n \u0111\u00e3 b\u1ecb v\u00f4 hi\u1ec7u h\u00f3a.");
+          setText("leadLine2", "Vui l\u00f2ng li\u00ean h\u1ec7 \u0111\u1ec3 \u0111\u01b0\u1ee3c h\u1ed7 tr\u1ee3.");
+          setText("contactLabel", "Li\u00ean h\u1ec7 h\u1ed7 tr\u1ee3 qua:");
+          setText("noteText", "Sau khi \u0111\u01b0\u1ee3c h\u1ed7 tr\u1ee3, k\u1ebft n\u1ed1i Internet s\u1ebd \u0111\u01b0\u1ee3c m\u1edf l\u1ea1i.");
+          return;
+        }
+        if (status === "expired") {
+          document.title = "VPN " + name + " \u0111\u00e3 h\u1ebft h\u1ea1n";
+          setText("mainTitle", "VPN " + name + " \u0111\u00e3 h\u1ebft h\u1ea1n");
+          setText("leadLine1", "D\u1ecbch v\u1ee5 VPN c\u1ee7a b\u1ea1n \u0111\u00e3 h\u1ebft h\u1ea1n.");
+          setText("leadLine2", "Vui l\u00f2ng gia h\u1ea1n \u0111\u1ec3 ti\u1ebfp t\u1ee5c s\u1eed d\u1ee5ng Internet.");
+          setText("contactLabel", "Li\u00ean h\u1ec7 gia h\u1ea1n qua:");
+          setText("noteText", "Sau khi gia h\u1ea1n, k\u1ebft n\u1ed1i Internet s\u1ebd \u0111\u01b0\u1ee3c m\u1edf l\u1ea1i.");
+        }
+      }
+
       function showClient(client) {
-        var name = client && client.name ? client.name : "Khach hang";
-        document.getElementById("userTitle").textContent = "Xin chao " + name;
+        var name = clientName(client);
+        var status = normalizedStatus(client);
+        applyMessage(client);
+        document.getElementById("userTitle").textContent = "Thong tin VPN " + name;
         document.getElementById("userName").textContent = name;
         document.getElementById("userIp").textContent = client && client.ip ? client.ip : ip || "-";
         document.getElementById("userNode").textContent = client && client.node ? client.node : node || "-";
-        setStatus(client && client.status ? client.status : "unknown");
+        setStatus(status);
       }
 
       fetch("/api/client-info?node=" + encodeURIComponent(node) + "&ip=" + encodeURIComponent(ip), { cache: "no-store" })
