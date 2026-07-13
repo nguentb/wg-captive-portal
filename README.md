@@ -19,13 +19,46 @@ Neu muon dat mat khau admin san:
 curl -fsSL https://raw.githubusercontent.com/nguentb/wg-captive-portal/main/scripts/install-remote.sh | sudo bash -s -- --domain domain.com --admin-domain adm.domain.com --admin-password 'your-strong-password'
 ```
 
-Script se cai `nginx`, `nodejs`, tai repo ve `/opt/wg-captive-portal`, tao systemd service, cau hinh nginx reverse proxy va in ra mat khau admin neu duoc tao tu dong.
+Script se cai `nginx`, `nodejs`, tai repo ve `/opt/wg-captive-portal`, tao systemd service, cau hinh nginx reverse proxy HTTP, cai san lenh `ssl-install` va in ra mat khau admin neu duoc tao tu dong.
+
+## Cai SSL thu cong
+
+Sau khi DNS da tro ve server portal, chay tren server:
+
+```bash
+sudo ssl-install
+```
+
+Lenh nay se hoi lan luot:
+
+```text
+Portal domain: domain.com
+Admin domain: adm.domain.com
+Let's Encrypt email: admin@domain.com
+Cloudflare API token: token co quyen Zone DNS Edit voi zone domain.com
+```
+
+`ssl-install` se tu cai cac goi can thiet (`certbot`, `python3-certbot-dns-cloudflare`), ghi Cloudflare credentials vao `/etc/letsencrypt/wg-captive-cloudflare.ini` voi mode `0600`, cap cert cho ca portal va admin domain, ghi lai nginx HTTPS config, test `nginx -t` va reload nginx.
+
+Co the chay khong can hoi tuong tac:
+
+```bash
+sudo ssl-install --domain domain.com --admin-domain adm.domain.com --email admin@domain.com --cloudflare-token 'your-cloudflare-token'
+```
+
+Neu muon test Let's Encrypt staging truoc:
+
+```bash
+sudo ssl-install --domain domain.com --admin-domain adm.domain.com --email admin@domain.com --cloudflare-token 'your-cloudflare-token' --staging
+```
 
 ## Cai service Node
 
 ```bash
 sudo mkdir -p /opt/wg-captive-portal
 sudo cp index.html server.js package.json /opt/wg-captive-portal/
+sudo cp scripts/ssl-install.sh /usr/local/sbin/ssl-install
+sudo chmod +x /usr/local/sbin/ssl-install
 sudo cp systemd/wg-captive-portal.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now wg-captive-portal
@@ -81,7 +114,6 @@ DNS tro ve cung IP portal:
 domain.com      A  PORTAL_SERVER_IP
 adm.domain.com  A  PORTAL_SERVER_IP
 ```
-
 
 ## Chay Node truc tiep khong nginx
 

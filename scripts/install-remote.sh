@@ -134,6 +134,7 @@ install -d -m 0755 "$INSTALL_DIR"
 install -m 0644 "$SRC_DIR/index.html" "$INSTALL_DIR/index.html"
 install -m 0755 "$SRC_DIR/server.js" "$INSTALL_DIR/server.js"
 install -m 0644 "$SRC_DIR/package.json" "$INSTALL_DIR/package.json"
+install -m 0755 "$SRC_DIR/scripts/ssl-install.sh" /usr/local/sbin/ssl-install
 
 install -m 0644 "$SRC_DIR/systemd/wg-captive-portal.service" "/etc/systemd/system/${SERVICE_NAME}.service"
 install -d -m 0755 "/etc/systemd/system/${SERVICE_NAME}.service.d"
@@ -170,3 +171,4 @@ log "Portal: http://${DOMAIN}"
 log "Admin:  http://${ADMIN_DOMAIN}"
 log "Admin password: ${ADMIN_PASSWORD}"
 log "Node store: ${NODE_STORE}"
+log "SSL installer: sudo ssl-install"
