@@ -7,7 +7,6 @@ NGINX_ENABLED="${NGINX_ENABLED:-/etc/nginx/sites-enabled/wg-captive-portal}"
 CREDENTIALS_FILE="${CLOUDFLARE_CREDENTIALS:-/etc/letsencrypt/wg-captive-cloudflare.ini}"
 UPSTREAM="${UPSTREAM:-127.0.0.1:8080}"
 DOMAIN="${DOMAIN:-}"
-ADMIN_DOMAIN="${ADMIN_DOMAIN:-}"
 EMAIL="${EMAIL:-}"
 CLOUDFLARE_TOKEN="${CLOUDFLARE_TOKEN:-}"
 STAGING="${STAGING:-0}"
@@ -24,7 +23,7 @@ fail() {
 usage() {
   cat <<'EOF'
 Usage:
-  ssl-install [--domain domain.com] [--admin-domain adm.domain.com] [--email admin@domain.com] [--cloudflare-token TOKEN] [--staging]
+  ssl-install [--domain domain.com] [--email admin@domain.com] [--cloudflare-token TOKEN] [--staging]
 
 If values are omitted, ssl-install asks for them interactively.
 
@@ -43,7 +42,6 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     --admin-domain)
-      ADMIN_DOMAIN="${2:-}"
       shift 2
       ;;
     --email)
@@ -99,10 +97,6 @@ prompt DOMAIN "Portal domain" ""
 DOMAIN="$(printf '%s' "$DOMAIN" | sed -E 's#^https?://##; s#/.*$##; s/[[:space:]]//g' | tr '[:upper:]' '[:lower:]')"
 [[ -n "$DOMAIN" ]] || fail "Portal domain is required"
 
-prompt ADMIN_DOMAIN "Admin domain" "adm.${DOMAIN}"
-ADMIN_DOMAIN="$(printf '%s' "$ADMIN_DOMAIN" | sed -E 's#^https?://##; s#/.*$##; s/[[:space:]]//g' | tr '[:upper:]' '[:lower:]')"
-[[ -n "$ADMIN_DOMAIN" ]] || fail "Admin domain is required"
-
 prompt EMAIL "Let's Encrypt email" "admin@${DOMAIN}"
 [[ -n "$EMAIL" ]] || fail "Email is required"
 
@@ -134,13 +128,12 @@ CERTBOT_ARGS=(
   --email "$EMAIL"
   --cert-name "$DOMAIN"
   -d "$DOMAIN"
-  -d "$ADMIN_DOMAIN"
 )
 if [[ "$STAGING" == "1" ]]; then
   CERTBOT_ARGS+=(--staging)
 fi
 
-log "Requesting certificate for ${DOMAIN} and ${ADMIN_DOMAIN}"
+log "Requesting certificate for ${DOMAIN}"
 certbot "${CERTBOT_ARGS[@]}"
 
 log "Writing nginx HTTPS config to ${NGINX_SITE}"
@@ -149,14 +142,14 @@ cat > "$NGINX_SITE" <<EOF
 server {
     listen 80;
     listen [::]:80;
-    server_name ${DOMAIN} ${ADMIN_DOMAIN};
+    server_name ${DOMAIN};
     return 301 https://\$host\$request_uri;
 }
 
 server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
-    server_name ${DOMAIN} ${ADMIN_DOMAIN};
+    server_name ${DOMAIN};
 
     ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
@@ -184,4 +177,4 @@ systemctl reload nginx
 
 log "SSL installed successfully"
 log "Portal: https://${DOMAIN}"
-log "Admin:  https://${ADMIN_DOMAIN}"
+log "Admin:  https://${DOMAIN}/admin"

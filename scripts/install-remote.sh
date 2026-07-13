@@ -10,7 +10,6 @@ NODE_STORE="${NODE_STORE:-/etc/wg-captive-portal-nodes.json}"
 HOST_VALUE="${HOST:-127.0.0.1}"
 PORT_VALUE="${PORT:-8080}"
 DOMAIN="${DOMAIN:-}"
-ADMIN_DOMAIN="${ADMIN_DOMAIN:-}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-}"
 DISABLE_NGINX_DEFAULT="${DISABLE_NGINX_DEFAULT:-1}"
 TMP_DIR=""
@@ -33,11 +32,10 @@ systemd_env_value() {
 usage() {
   cat <<'EOF'
 Usage:
-  install-remote.sh --domain domain.com --admin-domain adm.domain.com [--admin-password PASSWORD]
+  install-remote.sh --domain domain.com [--admin-password PASSWORD]
 
 Options:
-  --domain DOMAIN             User portal domain, for example domain.com.
-  --admin-domain DOMAIN       Admin portal domain, for example adm.domain.com.
+  --domain DOMAIN             Portal domain, for example domain.com.
   --admin-password PASSWORD   Admin password. Generated if omitted.
   --branch BRANCH             GitHub branch, default main.
   --repo OWNER/REPO           GitHub repo, default nguentb/wg-captive-portal.
@@ -65,7 +63,6 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     --admin-domain)
-      ADMIN_DOMAIN="${2:-}"
       shift 2
       ;;
     --admin-password)
@@ -92,9 +89,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-[[ "${EUID}" -eq 0 ]] || fail "Please run as root, for example: curl -fsSL ... | sudo bash -s -- --domain domain.com --admin-domain adm.domain.com"
+[[ "${EUID}" -eq 0 ]] || fail "Please run as root, for example: curl -fsSL ... | sudo bash -s -- --domain domain.com"
 [[ -n "$DOMAIN" ]] || fail "--domain is required"
-[[ -n "$ADMIN_DOMAIN" ]] || fail "--admin-domain is required"
 
 if [[ -z "$ADMIN_PASSWORD" ]]; then
   if command -v openssl >/dev/null 2>&1; then
@@ -135,6 +131,8 @@ install -m 0644 "$SRC_DIR/index.html" "$INSTALL_DIR/index.html"
 install -m 0755 "$SRC_DIR/server.js" "$INSTALL_DIR/server.js"
 install -m 0644 "$SRC_DIR/package.json" "$INSTALL_DIR/package.json"
 install -m 0755 "$SRC_DIR/scripts/ssl-install.sh" /usr/local/sbin/ssl-install
+install -m 0755 "$SRC_DIR/scripts/portal-update.sh" /usr/local/sbin/portal-update
+install -m 0755 "$SRC_DIR/scripts/portal-uninstall.sh" /usr/local/sbin/portal-uninstall
 
 install -m 0644 "$SRC_DIR/systemd/wg-captive-portal.service" "/etc/systemd/system/${SERVICE_NAME}.service"
 install -d -m 0755 "/etc/systemd/system/${SERVICE_NAME}.service.d"
@@ -143,15 +141,14 @@ cat > "/etc/systemd/system/${SERVICE_NAME}.service.d/override.conf" <<EOF
 Environment=HOST=$(systemd_env_value "$HOST_VALUE")
 Environment=PORT=$(systemd_env_value "$PORT_VALUE")
 Environment=ADMIN_PASSWORD=$(systemd_env_value "$ADMIN_PASSWORD")
-Environment=ADMIN_HOST=$(systemd_env_value "$ADMIN_DOMAIN")
 Environment=NODE_STORE=$(systemd_env_value "$NODE_STORE")
 EOF
 
 log "Configuring nginx"
 install -d -m 0755 /etc/nginx/sites-available /etc/nginx/sites-enabled
 install -m 0644 "$SRC_DIR/nginx.conf" "/etc/nginx/sites-available/${SERVICE_NAME}"
-if [[ -n "$DOMAIN" || -n "$ADMIN_DOMAIN" ]]; then
-  sed -i "s/server_name _;/server_name ${DOMAIN} ${ADMIN_DOMAIN};/" "/etc/nginx/sites-available/${SERVICE_NAME}"
+if [[ -n "$DOMAIN" ]]; then
+  sed -i "s/server_name _;/server_name ${DOMAIN};/" "/etc/nginx/sites-available/${SERVICE_NAME}"
 fi
 ln -sfn "/etc/nginx/sites-available/${SERVICE_NAME}" "/etc/nginx/sites-enabled/${SERVICE_NAME}"
 if [[ "$DISABLE_NGINX_DEFAULT" == "1" && -L /etc/nginx/sites-enabled/default ]]; then
@@ -168,7 +165,9 @@ systemctl reload nginx
 
 log "Installed successfully"
 log "Portal: http://${DOMAIN}"
-log "Admin:  http://${ADMIN_DOMAIN}"
+log "Admin:  http://${DOMAIN}/admin"
 log "Admin password: ${ADMIN_PASSWORD}"
 log "Node store: ${NODE_STORE}"
 log "SSL installer: sudo ssl-install"
+log "Update: sudo portal-update"
+log "Uninstall: sudo portal-uninstall"

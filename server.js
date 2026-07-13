@@ -55,15 +55,9 @@ async function readJsonBody(req) {
   return JSON.parse(raw);
 }
 
-function hostname(req) {
-  return String(req.headers.host || "").split(":")[0].toLowerCase();
-}
 
-function isAdminHost(req) {
-  const name = hostname(req);
-  const configured = String(process.env.ADMIN_HOST || "").toLowerCase();
-  if (configured && name === configured) return true;
-  return name.startsWith("adm.");
+function isAdminPath(url) {
+  return url.pathname === "/admin" || url.pathname.startsWith("/admin/");
 }
 
 function loadStoredNodes() {
@@ -176,11 +170,11 @@ function isAdminAuthed(req) {
 
 function setAdminCookie(res) {
   const value = `admin.${signSession("admin")}`;
-  res.setHeader("Set-Cookie", `portal_admin=${encodeURIComponent(value)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=2592000`);
+  res.setHeader("Set-Cookie", `portal_admin=${encodeURIComponent(value)}; HttpOnly; SameSite=Lax; Path=/admin; Max-Age=2592000`);
 }
 
 function clearAdminCookie(res) {
-  res.setHeader("Set-Cookie", "portal_admin=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0");
+  res.setHeader("Set-Cookie", "portal_admin=; HttpOnly; SameSite=Lax; Path=/admin; Max-Age=0");
 }
 
 function apiGetJson(baseUrl, token, pathname) {
@@ -263,7 +257,7 @@ function adminPage() {
   <div class="shell">
     <div class="top">
       <div class="brand"><h1>Portal Admin</h1><p>Quan ly danh sach node WireGuard cho captive portal.</p></div>
-      <form method="post" action="/logout"><button class="ghost" type="submit">Logout</button></form>
+      <form method="post" action="/admin/logout"><button class="ghost" type="submit">Logout</button></form>
     </div>
     <section class="panel">
       <form id="nodeForm" class="grid">
@@ -282,9 +276,9 @@ function adminPage() {
     async function api(url,options){const res=await fetch(url,{headers:{'Content-Type':'application/json'},...options});const data=await res.json();if(!res.ok||data.ok===false)throw new Error(data.error||'Request failed');return data}
     function render(nodes){const box=$('nodeList');if(!nodes.length){box.innerHTML='<div class="muted">Chua co node nao.</div>';return}box.innerHTML=nodes.map((n)=>'<div class="row"><div><div class="name">'+escapeHtml(n.name)+'</div><div class="muted">'+escapeHtml(n.updatedAt||'')+'</div></div><div>'+escapeHtml(n.baseUrl)+'</div><div class="muted">Token: '+escapeHtml(n.tokenPrefix||'none')+'</div><div><button class="ghost edit" data-name="'+escapeHtml(n.name)+'" data-url="'+escapeHtml(n.baseUrl)+'">Edit</button> <button class="danger del" data-name="'+escapeHtml(n.name)+'">Delete</button></div></div>').join('')}
     function escapeHtml(v){return String(v||'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-    async function load(){const data=await api('/api/admin/nodes');render(data.nodes||[])}
-    $('nodeForm').addEventListener('submit',async(e)=>{e.preventDefault();const payload=Object.fromEntries(new FormData(e.target).entries());try{const data=await api('/api/admin/nodes',{method:'POST',body:JSON.stringify(payload)});render(data.nodes||[]);$('token').value='';toast('Da luu node')}catch(error){toast(error.message)}})
-    $('nodeList').addEventListener('click',async(e)=>{const edit=e.target.closest('.edit');const del=e.target.closest('.del');if(edit){$('name').value=edit.dataset.name;$('baseUrl').value=edit.dataset.url;$('token').value='';$('name').focus();return}if(del){if(!confirm('Xoa node '+del.dataset.name+'?'))return;try{const data=await api('/api/admin/nodes/'+encodeURIComponent(del.dataset.name),{method:'DELETE'});render(data.nodes||[]);toast('Da xoa node')}catch(error){toast(error.message)}}})
+    async function load(){const data=await api('/admin/api/nodes');render(data.nodes||[])}
+    $('nodeForm').addEventListener('submit',async(e)=>{e.preventDefault();const payload=Object.fromEntries(new FormData(e.target).entries());try{const data=await api('/admin/api/nodes',{method:'POST',body:JSON.stringify(payload)});render(data.nodes||[]);$('token').value='';toast('Da luu node')}catch(error){toast(error.message)}})
+    $('nodeList').addEventListener('click',async(e)=>{const edit=e.target.closest('.edit');const del=e.target.closest('.del');if(edit){$('name').value=edit.dataset.name;$('baseUrl').value=edit.dataset.url;$('token').value='';$('name').focus();return}if(del){if(!confirm('Xoa node '+del.dataset.name+'?'))return;try{const data=await api('/admin/api/nodes/'+encodeURIComponent(del.dataset.name),{method:'DELETE'});render(data.nodes||[]);toast('Da xoa node')}catch(error){toast(error.message)}}})
     load().catch((error)=>toast(error.message));
   </script>
 </body>
@@ -292,29 +286,29 @@ function adminPage() {
 }
 
 function loginPage(error = "") {
-  return `<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Portal Admin Login</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b1220;color:#f8fafc;font-family:system-ui,"Segoe UI",Arial,sans-serif}.panel{width:min(420px,calc(100% - 28px));background:#111c2f;border:1px solid rgba(148,163,184,.16);border-radius:16px;padding:24px;box-shadow:0 24px 70px rgba(0,0,0,.34)}h1{margin:0 0 16px}form{display:grid;gap:12px}input,button{border-radius:12px;padding:13px;font:inherit}input{border:1px solid #263449;background:#08111f;color:#fff}button{border:0;background:#2f6df6;color:#fff;font-weight:850}.err{color:#fecaca;margin:0 0 12px}</style></head><body><main class="panel"><h1>Portal Admin</h1>${error ? `<p class="err">${error}</p>` : ""}<form method="post" action="/login"><input type="password" name="password" placeholder="Admin password" autofocus><button type="submit">Login</button></form></main></body></html>`;
+  return `<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Portal Admin Login</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b1220;color:#f8fafc;font-family:system-ui,"Segoe UI",Arial,sans-serif}.panel{width:min(420px,calc(100% - 28px));background:#111c2f;border:1px solid rgba(148,163,184,.16);border-radius:16px;padding:24px;box-shadow:0 24px 70px rgba(0,0,0,.34)}h1{margin:0 0 16px}form{display:grid;gap:12px}input,button{border-radius:12px;padding:13px;font:inherit}input{border:1px solid #263449;background:#08111f;color:#fff}button{border:0;background:#2f6df6;color:#fff;font-weight:850}.err{color:#fecaca;margin:0 0 12px}</style></head><body><main class="panel"><h1>Portal Admin</h1>${error ? `<p class="err">${error}</p>` : ""}<form method="post" action="/admin/login"><input type="password" name="password" placeholder="Admin password" autofocus><button type="submit">Login</button></form></main></body></html>`;
 }
 
 async function handleAdmin(req, res, url) {
-  if (req.method === "POST" && url.pathname === "/login") {
+  if (req.method === "POST" && url.pathname === "/admin/login") {
     const body = new URLSearchParams(await readBody(req));
     if (String(body.get("password") || "") === adminPassword) {
       setAdminCookie(res);
-      res.writeHead(302, { Location: "/" });
+      res.writeHead(302, { Location: "/admin" });
       return res.end();
     }
     return sendHtml(res, loginPage("Sai mat khau"));
   }
-  if (req.method === "POST" && url.pathname === "/logout") {
+  if (req.method === "POST" && url.pathname === "/admin/logout") {
     clearAdminCookie(res);
-    res.writeHead(302, { Location: "/" });
+    res.writeHead(302, { Location: "/admin" });
     return res.end();
   }
   if (!isAdminAuthed(req)) return sendHtml(res, loginPage());
-  if (req.method === "GET" && url.pathname === "/api/admin/nodes") {
+  if (req.method === "GET" && url.pathname === "/admin/api/nodes") {
     return sendJson(res, 200, { ok: true, nodes: loadStoredNodes().map(publicNode) });
   }
-  if (req.method === "POST" && url.pathname === "/api/admin/nodes") {
+  if (req.method === "POST" && url.pathname === "/admin/api/nodes") {
     try {
       upsertNode(await readJsonBody(req));
       return sendJson(res, 200, { ok: true, nodes: loadStoredNodes().map(publicNode) });
@@ -322,7 +316,7 @@ async function handleAdmin(req, res, url) {
       return sendJson(res, 400, { ok: false, error: error.message });
     }
   }
-  const deleteMatch = url.pathname.match(/^\/api\/admin\/nodes\/([^/]+)$/);
+  const deleteMatch = url.pathname.match(/^\/admin\/api\/nodes\/([^/]+)$/);
   if (req.method === "DELETE" && deleteMatch) {
     deleteNode(decodeURIComponent(deleteMatch[1]));
     return sendJson(res, 200, { ok: true, nodes: loadStoredNodes().map(publicNode) });
@@ -347,7 +341,7 @@ async function handlePortal(req, res, url) {
 http.createServer(async (req, res) => {
   const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
   try {
-    if (isAdminHost(req)) return await handleAdmin(req, res, url);
+    if (isAdminPath(url)) return await handleAdmin(req, res, url);
     return await handlePortal(req, res, url);
   } catch (error) {
     console.error(error);

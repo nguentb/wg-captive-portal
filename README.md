@@ -1,25 +1,25 @@
 # wg-captive-portal
 
-Web HTTP/HTTPS rieng cho captive portal. Domain chinh hien trang het han, subdomain `adm.*` hien trang admin quan ly node.
+Web HTTP/HTTPS rieng cho captive portal. Dung mot domain duy nhat: trang user o `/`, admin quan ly node o `/admin`.
 
 - `domain.com`: portal cho user het han
-- `adm.domain.com`: admin them/sua/xoa node WireGuard
+- `domain.com/admin`: admin them/sua/xoa node WireGuard
 
 ## Cai dat 1 lenh
 
 Tren Ubuntu server portal, chay:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/nguentb/wg-captive-portal/main/scripts/install-remote.sh | sudo bash -s -- --domain domain.com --admin-domain adm.domain.com
+curl -fsSL https://raw.githubusercontent.com/nguentb/wg-captive-portal/main/scripts/install-remote.sh | sudo bash -s -- --domain domain.com
 ```
 
 Neu muon dat mat khau admin san:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/nguentb/wg-captive-portal/main/scripts/install-remote.sh | sudo bash -s -- --domain domain.com --admin-domain adm.domain.com --admin-password 'your-strong-password'
+curl -fsSL https://raw.githubusercontent.com/nguentb/wg-captive-portal/main/scripts/install-remote.sh | sudo bash -s -- --domain domain.com --admin-password 'your-strong-password'
 ```
 
-Script se cai `nginx`, `nodejs`, tai repo ve `/opt/wg-captive-portal`, tao systemd service, cau hinh nginx reverse proxy HTTP, cai san lenh `ssl-install` va in ra mat khau admin neu duoc tao tu dong.
+Script se cai `nginx`, `nodejs`, tai repo ve `/opt/wg-captive-portal`, tao systemd service, cau hinh nginx reverse proxy HTTP, cai san cac lenh `ssl-install`, `portal-update`, `portal-uninstall` va in ra mat khau admin neu duoc tao tu dong.
 
 ## Cai SSL thu cong
 
@@ -33,23 +33,70 @@ Lenh nay se hoi lan luot:
 
 ```text
 Portal domain: domain.com
-Admin domain: adm.domain.com
 Let's Encrypt email: admin@domain.com
 Cloudflare API token: token co quyen Zone DNS Edit voi zone domain.com
 ```
 
-`ssl-install` se tu cai cac goi can thiet (`certbot`, `python3-certbot-dns-cloudflare`), ghi Cloudflare credentials vao `/etc/letsencrypt/wg-captive-cloudflare.ini` voi mode `0600`, cap cert cho ca portal va admin domain, ghi lai nginx HTTPS config, test `nginx -t` va reload nginx.
+`ssl-install` se tu cai cac goi can thiet (`certbot`, `python3-certbot-dns-cloudflare`), ghi Cloudflare credentials vao `/etc/letsencrypt/wg-captive-cloudflare.ini` voi mode `0600`, cap cert cho domain portal, ghi lai nginx HTTPS config, test `nginx -t` va reload nginx. Admin se dung chung domain tai `/admin`.
 
 Co the chay khong can hoi tuong tac:
 
 ```bash
-sudo ssl-install --domain domain.com --admin-domain adm.domain.com --email admin@domain.com --cloudflare-token 'your-cloudflare-token'
+sudo ssl-install --domain domain.com --email admin@domain.com --cloudflare-token 'your-cloudflare-token'
 ```
 
 Neu muon test Let's Encrypt staging truoc:
 
 ```bash
-sudo ssl-install --domain domain.com --admin-domain adm.domain.com --email admin@domain.com --cloudflare-token 'your-cloudflare-token' --staging
+sudo ssl-install --domain domain.com --email admin@domain.com --cloudflare-token 'your-cloudflare-token' --staging
+```
+
+## Update bang CLI
+
+Sau khi da cai portal, update len ban moi nhat bang:
+
+```bash
+sudo portal-update
+```
+
+Neu muon update tu branch hoac repo khac:
+
+```bash
+sudo portal-update --branch main --repo nguentb/wg-captive-portal
+```
+
+`portal-update` se tai source moi, cap nhat file app, cap nhat cac CLI script, cap nhat systemd unit va restart service. Script khong ghi de nginx HTTPS dang co, de tranh lam mat cau hinh SSL hien tai. Neu nginx site bi mat, co the tao lai HTTP config bang:
+
+```bash
+sudo portal-update --domain domain.com
+```
+
+## Uninstall bang CLI
+
+Go portal khoi server:
+
+```bash
+sudo portal-uninstall
+```
+
+Mac dinh lenh nay go service, nginx site, file app va cac CLI command, nhung giu lai data node va SSL/cert.
+
+Xoa ca data node:
+
+```bash
+sudo portal-uninstall --purge-data
+```
+
+Xoa ca SSL/cert va Cloudflare credentials:
+
+```bash
+sudo portal-uninstall --purge-ssl --domain domain.com
+```
+
+Neu muon chay khong hoi xac nhan:
+
+```bash
+sudo portal-uninstall --yes
 ```
 
 ## Cai service Node
@@ -58,7 +105,9 @@ sudo ssl-install --domain domain.com --admin-domain adm.domain.com --email admin
 sudo mkdir -p /opt/wg-captive-portal
 sudo cp index.html server.js package.json /opt/wg-captive-portal/
 sudo cp scripts/ssl-install.sh /usr/local/sbin/ssl-install
-sudo chmod +x /usr/local/sbin/ssl-install
+sudo cp scripts/portal-update.sh /usr/local/sbin/portal-update
+sudo cp scripts/portal-uninstall.sh /usr/local/sbin/portal-uninstall
+sudo chmod +x /usr/local/sbin/ssl-install /usr/local/sbin/portal-update /usr/local/sbin/portal-uninstall
 sudo cp systemd/wg-captive-portal.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now wg-captive-portal
@@ -75,7 +124,6 @@ Them:
 ```ini
 [Service]
 Environment=ADMIN_PASSWORD=your-strong-password
-Environment=ADMIN_HOST=adm.domain.com
 Environment=NODE_STORE=/etc/wg-captive-portal-nodes.json
 ```
 
@@ -95,7 +143,6 @@ Neu dung nginx/SSL, nen cho Node nghe local port, vi nginx nghe 80/443:
 Environment=HOST=127.0.0.1
 Environment=PORT=8080
 Environment=ADMIN_PASSWORD=your-strong-password
-Environment=ADMIN_HOST=adm.domain.com
 Environment=NODE_STORE=/etc/wg-captive-portal-nodes.json
 ```
 
@@ -108,11 +155,10 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-DNS tro ve cung IP portal:
+DNS tro ve IP portal:
 
 ```text
-domain.com      A  PORTAL_SERVER_IP
-adm.domain.com  A  PORTAL_SERVER_IP
+domain.com  A  PORTAL_SERVER_IP
 ```
 
 ## Chay Node truc tiep khong nginx
@@ -123,7 +169,6 @@ Neu khong dung nginx, override service de Node nghe public port 80:
 [Service]
 Environment=HOST=0.0.0.0
 Environment=PORT=80
-Environment=ADMIN_HOST=adm.domain.com
 Environment=ADMIN_PASSWORD=your-strong-password
 ```
 
@@ -132,7 +177,7 @@ Environment=ADMIN_PASSWORD=your-strong-password
 Vao:
 
 ```text
-https://adm.domain.com
+https://domain.com/admin
 ```
 
 Them node gom:
@@ -184,7 +229,7 @@ Node trong admin se uu tien hon env neu trung server name.
 ```bash
 curl -i http://domain.com/
 curl -i http://domain.com/?node=wg-server-01\&ip=10.8.0.2
-curl -i http://adm.domain.com/
+curl -i http://domain.com/admin
 ```
 
-Moi URL HTTP tren domain portal deu nen tra ve trang `VPN het han`, tru `adm.*` se vao admin.
+Moi URL HTTP tren domain portal deu nen tra ve trang `VPN het han`, tru `/admin` se vao admin.
