@@ -100,6 +100,63 @@
       line-height: 1.35;
     }
 
+    .user-card {
+      margin: 16px 0 0;
+      padding: 14px 16px;
+      border: 1px solid rgba(47, 104, 232, 0.32);
+      border-radius: 15px;
+      background: rgba(5, 10, 26, 0.66);
+      text-align: left;
+    }
+
+    .user-card.hidden {
+      display: none;
+    }
+
+    .user-title {
+      margin: 0 0 8px;
+      color: var(--text);
+      font-size: 18px;
+      line-height: 1.25;
+      font-weight: 800;
+    }
+
+    .user-grid {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.35;
+    }
+
+    .user-grid strong {
+      color: var(--text);
+      font-weight: 800;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(255, 107, 112, 0.16);
+      color: #ffb4b7;
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .status-pill.active {
+      background: rgba(37, 211, 102, 0.16);
+      color: #8af0b0;
+    }
+
+    .status-pill.disabled {
+      background: rgba(255, 200, 90, 0.16);
+      color: #ffd98b;
+    }
+
     .contact-card {
       margin-top: 16px;
       padding: 22px 20px 18px;
@@ -361,6 +418,15 @@
       <h1>VPN &#273;&#227; h&#7871;t h&#7841;n</h1>
       <p class="lead">D&#7883;ch v&#7909; VPN c&#7911;a b&#7841;n &#273;&#227; h&#7871;t h&#7841;n.</p>
       <p class="lead">Vui l&#242;ng gia h&#7841;n &#273;&#7875; ti&#7871;p t&#7909;c s&#7917; d&#7909;ng Internet.</p>
+      <section id="userCard" class="user-card hidden" aria-live="polite">
+        <p class="user-title" id="userTitle">Dang kiem tra thong tin tai khoan...</p>
+        <div class="user-grid">
+          <div>User: <strong id="userName">-</strong></div>
+          <div>IP: <strong id="userIp">-</strong></div>
+          <div>Node: <strong id="userNode">-</strong></div>
+          <div>Trang thai: <span id="userStatus" class="status-pill">unknown</span></div>
+        </div>
+      </section>
 
       <section class="contact-card" aria-label="Lien he gia han">
         <p class="contact-label">Li&#234;n h&#7879; gia h&#7841;n qua:</p>
@@ -378,5 +444,43 @@
 
     <footer>Powered by <strong>&#272;&#7841;i An VPN</strong></footer>
   </div>
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var node = params.get("node") || "";
+      var ip = params.get("ip") || "";
+      var card = document.getElementById("userCard");
+      if (!node && !ip) return;
+      card.classList.remove("hidden");
+      document.getElementById("userIp").textContent = ip || "-";
+      document.getElementById("userNode").textContent = node || "-";
+
+      function setStatus(status) {
+        var el = document.getElementById("userStatus");
+        var value = status || "unknown";
+        el.textContent = value;
+        el.className = "status-pill " + value;
+      }
+
+      function showClient(client) {
+        var name = client && client.name ? client.name : "Khach hang";
+        document.getElementById("userTitle").textContent = "Xin chao " + name;
+        document.getElementById("userName").textContent = name;
+        document.getElementById("userIp").textContent = client && client.ip ? client.ip : ip || "-";
+        document.getElementById("userNode").textContent = client && client.node ? client.node : node || "-";
+        setStatus(client && client.status ? client.status : "unknown");
+      }
+
+      fetch("/api/client-info?node=" + encodeURIComponent(node) + "&ip=" + encodeURIComponent(ip), { cache: "no-store" })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          if (data && data.client) showClient(data.client);
+          else showClient({ node: node, ip: ip, status: "unknown" });
+        })
+        .catch(function () {
+          showClient({ node: node, ip: ip, status: "unknown" });
+        });
+    }());
+  </script>
 </body>
 </html>

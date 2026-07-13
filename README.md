@@ -1,8 +1,11 @@
 # wg-captive-portal
 
-Web HTTP rieng cho captive portal, chi hien thong bao VPN het han. Dat server nay lam `PORTAL_IP` trong `wg-captive-agent`.
+Web HTTP/HTTPS rieng cho captive portal. Domain chinh hien trang het han, subdomain `adm.*` hien trang admin quan ly node.
 
-## Chay bang Node.js
+- `domain.com`: portal cho user het han
+- `adm.domain.com`: admin them/sua/xoa node WireGuard
+
+## Chay bang Node.js truc tiep
 
 ```bash
 sudo mkdir -p /opt/wg-captive-portal
@@ -12,7 +15,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now wg-captive-portal
 ```
 
-Mac dinh web nghe `0.0.0.0:80`. Neu muon doi port:
+Mac dinh web nghe `0.0.0.0:80`. Nen doi mat khau admin truoc khi public:
 
 ```bash
 sudo systemctl edit wg-captive-portal
@@ -22,25 +25,103 @@ Them:
 
 ```ini
 [Service]
-Environment=PORT=8080
+Environment=ADMIN_PASSWORD=your-strong-password
+Environment=NODE_STORE=/etc/wg-captive-portal-nodes.json
 ```
 
-## Chay bang nginx
+Sau do:
 
 ```bash
-sudo mkdir -p /var/www/wg-captive-portal
-sudo cp index.html /var/www/wg-captive-portal/index.html
+sudo systemctl daemon-reload
+sudo systemctl restart wg-captive-portal
+```
+
+## Chay sau nginx
+
+Neu dung nginx/SSL, nen cho Node nghe local port, vi nginx nghe 80/443:
+
+```ini
+[Service]
+Environment=HOST=127.0.0.1
+Environment=PORT=8080
+Environment=ADMIN_PASSWORD=your-strong-password
+Environment=NODE_STORE=/etc/wg-captive-portal-nodes.json
+```
+
+Copy nginx reverse proxy:
+
+```bash
 sudo cp nginx.conf /etc/nginx/sites-available/wg-captive-portal
 sudo ln -s /etc/nginx/sites-available/wg-captive-portal /etc/nginx/sites-enabled/wg-captive-portal
 sudo nginx -t
 sudo systemctl reload nginx
 ```
 
+DNS tro ve cung IP portal:
+
+```text
+domain.com      A  PORTAL_SERVER_IP
+adm.domain.com  A  PORTAL_SERVER_IP
+```
+
+## Admin node
+
+Vao:
+
+```text
+https://adm.domain.com
+```
+
+Them node gom:
+
+```text
+Server name: wg-server-01
+Node API address: https://wg.example.com:51822
+API token: wgc_xxxxxxxxxxxxxxxxxxxxx
+```
+
+Token duoc luu o server portal va khong hien day du tren trinh duyet.
+
+## Portal user
+
+Portal nhan link dang:
+
+```text
+https://domain.com/?node=wg-server-01&ip=10.8.0.2
+```
+
+Trang se goi backend portal:
+
+```text
+GET /api/client-info?node=wg-server-01&ip=10.8.0.2
+```
+
+Backend portal se doc danh sach node da cau hinh trong admin, goi API node WireGuard, lay ten user/trang thai/han dung, roi tra ve cho giao dien portal.
+
+## Cau hinh bang env neu khong dung admin
+
+Van co the cau hinh mot node bang env:
+
+```ini
+Environment=NODE_NAME=wg-server-01
+Environment=NODE_API_BASE=https://wg.example.com:51822
+Environment=NODE_API_TOKEN=wgc_xxxxxxxxxxxxxxxxxxxxx
+```
+
+Hoac nhieu node bang JSON:
+
+```ini
+Environment='NODE_API_CONFIG={"wg-server-01":{"baseUrl":"https://wg1.example.com:51822","token":"wgc_token_1"},"wg-server-02":{"baseUrl":"https://wg2.example.com:51822","token":"wgc_token_2"}}'
+```
+
+Node trong admin se uu tien hon env neu trung server name.
+
 ## Kiem tra
 
 ```bash
-curl -i http://SERVER_IP/
-curl -i http://SERVER_IP/generate_204
+curl -i http://domain.com/
+curl -i http://domain.com/?node=wg-server-01\&ip=10.8.0.2
+curl -i http://adm.domain.com/
 ```
 
-Moi URL HTTP deu nen tra ve trang `VPN het han`.
+Moi URL HTTP tren domain portal deu nen tra ve trang `VPN het han`, tru `adm.*` se vao admin.
